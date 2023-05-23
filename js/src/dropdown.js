@@ -71,6 +71,7 @@ const PLACEMENT_BOTTOMCENTER = 'bottom'
 const Default = {
   autoClose: true,
   boundary: 'clippingParents',
+  strategy: 'absolute',
   display: 'dynamic',
   offset: [0, 2],
   popperConfig: null,
@@ -80,6 +81,7 @@ const Default = {
 const DefaultType = {
   autoClose: '(boolean|string)',
   boundary: '(string|element)',
+  strategy: 'string',
   display: 'string',
   offset: '(array|string|function)',
   popperConfig: '(null|object|function)',
@@ -306,7 +308,8 @@ class Dropdown extends BaseComponent {
         options: {
           offset: this._getOffset()
         }
-      }]
+      }],
+      strategy: this._config.strategy
     }
 
     // Disable Popper if we have a static display or Dropdown is in Navbar
