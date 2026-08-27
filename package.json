@@ -186,7 +186,7 @@
     "zod": "^4.4.3"
   },
   "overrides": {
-    "axios": "^1.16.0",
+    "axios": "^1.18.0",
     "@yarnpkg/parsers": {
       "js-yaml": "^3.15.0"
     },
