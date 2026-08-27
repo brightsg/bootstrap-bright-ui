@@ -186,7 +186,19 @@
     "zod": "^4.4.3"
   },
   "overrides": {
-    "axios": "^1.16.0"
+    "axios": "^1.16.0",
+    "@yarnpkg/parsers": {
+      "js-yaml": "^3.15.0"
+    },
+    "eslint": {
+      "js-yaml": "^4.3.0"
+    },
+    "@eslint/eslintrc": {
+      "js-yaml": "^4.3.0"
+    },
+    "cosmiconfig": {
+      "js-yaml": "^4.3.0"
+    }
   },
   "files": [
     "dist/{css,js}/*.{css,js,map}",
