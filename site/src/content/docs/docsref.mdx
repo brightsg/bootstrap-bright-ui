@@ -6,12 +6,6 @@ toc: true
 robots: noindex,follow
 ---
 
-## Buttons
-
-<button class="btn btn-bd-primary">Primary button</button>
-<button class="btn btn-bd-accent">Accent button</button>
-<button class="btn btn-bd-light">Light button</button>
-
 ## Callouts
 
 <Callout>
@@ -26,6 +20,12 @@ robots: noindex,follow
   Danger callout
 </Callout>
 
+## Details
+
+<Details summary="Click to expand inline content">
+  This is inline details content. It supports **markdown** formatting and will be hidden until clicked.
+</Details>
+
 ## Code example
 
 ```scss
@@ -38,6 +38,6 @@ robots: noindex,follow
 
 <Example code={`<div class="test">This is a test.</div>`} />
 
-<ScssDocs name="variable-gradient" file="scss/_variables.scss" />
+<ScssDocs name="variable-gradient" file="scss/_config.scss" />
 
 <JsDocs name="live-toast" file="site/src/assets/partials/snippets.js" />

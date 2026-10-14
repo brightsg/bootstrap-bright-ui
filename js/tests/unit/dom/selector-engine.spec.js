@@ -57,27 +57,36 @@ describe('SelectorEngine', () => {
     })
   })
 
-  describe('children', () => {
-    it('should find children', () => {
-      fixtureEl.innerHTML = [
-        '<ul>',
-        '  <li></li>',
-        '  <li></li>',
-        '  <li></li>',
-        '</ul>'
-      ].join('')
-
-      const list = fixtureEl.querySelector('ul')
-      const liList = [].concat(...fixtureEl.querySelectorAll('li'))
-      const result = SelectorEngine.children(list, 'li')
-
-      expect(result).toEqual(liList)
-    })
-  })
-
   describe('parents', () => {
     it('should return parents', () => {
       expect(SelectorEngine.parents(fixtureEl, 'body')).toHaveSize(1)
+    })
+  })
+
+  describe('closest', () => {
+    it('should return the element itself when it matches the selector', () => {
+      fixtureEl.innerHTML = '<div id="test"><div id="element"></div></div>'
+
+      const element = fixtureEl.querySelector('#element')
+
+      expect(SelectorEngine.closest(element, '#element')).toEqual(element)
+    })
+
+    it('should return the closest ancestor matching the selector', () => {
+      fixtureEl.innerHTML = '<div id="test"><div><div id="element"></div></div></div>'
+
+      const element = fixtureEl.querySelector('#element')
+      const ancestor = fixtureEl.querySelector('#test')
+
+      expect(SelectorEngine.closest(element, '#test')).toEqual(ancestor)
+    })
+
+    it('should return null when no ancestor matches the selector', () => {
+      fixtureEl.innerHTML = '<div><div id="element"></div></div>'
+
+      const element = fixtureEl.querySelector('#element')
+
+      expect(SelectorEngine.closest(element, '.missing')).toBeNull()
     })
   })
 
@@ -156,80 +165,6 @@ describe('SelectorEngine', () => {
       const divTest = fixtureEl.querySelector('.test')
 
       expect(SelectorEngine.next(divTest, '.btn')).toEqual([btn])
-    })
-  })
-
-  describe('focusableChildren', () => {
-    it('should return only elements with specific tag names', () => {
-      fixtureEl.innerHTML = [
-        '<div>lorem</div>',
-        '<span>lorem</span>',
-        '<a>lorem</a>',
-        '<button>lorem</button>',
-        '<input>',
-        '<textarea></textarea>',
-        '<select></select>',
-        '<details>lorem</details>'
-      ].join('')
-
-      const expectedElements = [
-        fixtureEl.querySelector('a'),
-        fixtureEl.querySelector('button'),
-        fixtureEl.querySelector('input'),
-        fixtureEl.querySelector('textarea'),
-        fixtureEl.querySelector('select'),
-        fixtureEl.querySelector('details')
-      ]
-
-      expect(SelectorEngine.focusableChildren(fixtureEl)).toEqual(expectedElements)
-    })
-
-    it('should return any element with non negative tab index', () => {
-      fixtureEl.innerHTML = [
-        '<div tabindex>lorem</div>',
-        '<div tabindex="0">lorem</div>',
-        '<div tabindex="10">lorem</div>'
-      ].join('')
-
-      const expectedElements = [
-        fixtureEl.querySelector('[tabindex]'),
-        fixtureEl.querySelector('[tabindex="0"]'),
-        fixtureEl.querySelector('[tabindex="10"]')
-      ]
-
-      expect(SelectorEngine.focusableChildren(fixtureEl)).toEqual(expectedElements)
-    })
-
-    it('should return not return elements with negative tab index', () => {
-      fixtureEl.innerHTML = '<button tabindex="-1">lorem</button>'
-
-      const expectedElements = []
-
-      expect(SelectorEngine.focusableChildren(fixtureEl)).toEqual(expectedElements)
-    })
-
-    it('should return contenteditable elements', () => {
-      fixtureEl.innerHTML = '<div contenteditable="true">lorem</div>'
-
-      const expectedElements = [fixtureEl.querySelector('[contenteditable="true"]')]
-
-      expect(SelectorEngine.focusableChildren(fixtureEl)).toEqual(expectedElements)
-    })
-
-    it('should not return disabled elements', () => {
-      fixtureEl.innerHTML = '<button disabled="true">lorem</button>'
-
-      const expectedElements = []
-
-      expect(SelectorEngine.focusableChildren(fixtureEl)).toEqual(expectedElements)
-    })
-
-    it('should not return invisible elements', () => {
-      fixtureEl.innerHTML = '<button style="display:none;">lorem</button>'
-
-      const expectedElements = []
-
-      expect(SelectorEngine.focusableChildren(fixtureEl)).toEqual(expectedElements)
     })
   })
 
@@ -356,7 +291,7 @@ describe('SelectorEngine', () => {
 
       const testEl = fixtureEl.querySelector('#test')
 
-      expect(SelectorEngine.getMultipleElementsFromSelector(testEl)).toEqual(Array.from(fixtureEl.querySelectorAll('.target')))
+      expect(SelectorEngine.getMultipleElementsFromSelector(testEl)).toEqual([...fixtureEl.querySelectorAll('.target')])
     })
 
     it('should get elements if several ids are given', () => {
@@ -368,7 +303,7 @@ describe('SelectorEngine', () => {
 
       const testEl = fixtureEl.querySelector('#test')
 
-      expect(SelectorEngine.getMultipleElementsFromSelector(testEl)).toEqual(Array.from(fixtureEl.querySelectorAll('.target')))
+      expect(SelectorEngine.getMultipleElementsFromSelector(testEl)).toEqual([...fixtureEl.querySelectorAll('.target')])
     })
 
     it('should get elements if several ids with special chars are given', () => {
@@ -380,7 +315,7 @@ describe('SelectorEngine', () => {
 
       const testEl = fixtureEl.querySelector('#test')
 
-      expect(SelectorEngine.getMultipleElementsFromSelector(testEl)).toEqual(Array.from(fixtureEl.querySelectorAll('.target')))
+      expect(SelectorEngine.getMultipleElementsFromSelector(testEl)).toEqual([...fixtureEl.querySelectorAll('.target')])
     })
 
     it('should get elements in array, from href if no data-bs-target set', () => {
@@ -392,7 +327,7 @@ describe('SelectorEngine', () => {
 
       const testEl = fixtureEl.querySelector('#test')
 
-      expect(SelectorEngine.getMultipleElementsFromSelector(testEl)).toEqual(Array.from(fixtureEl.querySelectorAll('.target')))
+      expect(SelectorEngine.getMultipleElementsFromSelector(testEl)).toEqual([...fixtureEl.querySelectorAll('.target')])
     })
 
     it('should return empty array if elements not found', () => {

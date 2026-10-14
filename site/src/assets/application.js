@@ -1,6 +1,4 @@
-// NOTICE!! DO NOT USE ANY OF THIS JAVASCRIPT
-// IT'S ALL JUST JUNK FOR OUR DOCS!
-// ++++++++++++++++++++++++++++++++++++++++++
+// NOTICE: Internal docs helpers — not shipped in Bootstrap; not for reuse.
 
 /*!
  * JavaScript for Bootstrap's docs (https://getbootstrap.com/)
@@ -11,6 +9,16 @@
 
 import sidebarScroll from './partials/sidebar.js'
 import snippets from './partials/snippets.js'
+import stickyNav from './partials/sticky.js'
+import tocDrawer from './partials/toc.js'
+import tocHeight from './partials/toc-height.js'
+import tocScroll from './partials/toc-scroll.js'
 
-sidebarScroll()
-snippets()
+export default () => {
+  sidebarScroll()
+  snippets()
+  stickyNav()
+  tocDrawer()
+  tocHeight()
+  tocScroll()
+}

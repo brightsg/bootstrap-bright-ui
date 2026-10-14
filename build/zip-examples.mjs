@@ -18,7 +18,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const pkgJson = path.join(__dirname, '../package.json')
 const pkg = JSON.parse(await fs.readFile(pkgJson, 'utf8'))
 
-const versionShort = pkg.config.version_short
+const { versionShort } = pkg.bootstrap
 const distFolder = `bootstrap-${pkg.version}-examples`
 const rootDocsDir = '_site'
 const docsDir = `${rootDocsDir}/docs/${versionShort}/`
@@ -26,9 +26,7 @@ const docsDir = `${rootDocsDir}/docs/${versionShort}/`
 // these are the files we need in the examples
 const cssFiles = [
   'bootstrap.min.css',
-  'bootstrap.min.css.map',
-  'bootstrap.rtl.min.css',
-  'bootstrap.rtl.min.css.map'
+  'bootstrap.min.css.map'
 ]
 const jsFiles = [
   'bootstrap.bundle.min.js',
@@ -113,8 +111,8 @@ const formatPromises = htmlFiles.map(async file => {
 
 await Promise.all(formatPromises)
 
-// create the zip file
-sh.exec(`zip -qr9 "${distFolder}.zip" "${distFolder}"`)
+// create the zip file, excluding macOS .DS_Store files
+sh.exec(`zip -qr9 "${distFolder}.zip" "${distFolder}" -x "*.DS_Store"`)
 
 // remove the folder we created
 sh.rm('-rf', distFolder)

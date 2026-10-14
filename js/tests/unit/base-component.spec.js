@@ -93,6 +93,19 @@ describe('Base Component', () => {
         expect(elInstance._element).not.toBeDefined()
         expect(selectorInstance._element).not.toBeDefined()
       })
+
+      it('should dispose an existing instance when re-instantiated on the same element', () => {
+        fixtureEl.innerHTML = '<div id="foo"></div>'
+
+        const el = fixtureEl.querySelector('#foo')
+        const firstInstance = new DummyClass(el)
+        const disposeSpy = spyOn(firstInstance, 'dispose').and.callThrough()
+        const secondInstance = new DummyClass(el)
+
+        expect(disposeSpy).toHaveBeenCalled()
+        expect(DummyClass.getInstance(el)).toEqual(secondInstance)
+        expect(DummyClass.getInstance(el)).not.toEqual(firstInstance)
+      })
     })
 
     describe('dispose', () => {
@@ -114,6 +127,21 @@ describe('Base Component', () => {
 
         expect(spy).toHaveBeenCalledWith(element, DummyClass.EVENT_KEY)
       })
+
+      it('should not run a queued transition callback once the instance is disposed', () => {
+        return new Promise(resolve => {
+          createInstance()
+          const callbackSpy = jasmine.createSpy('callback')
+
+          instance._queueCallback(callbackSpy, element, true)
+          instance.dispose()
+
+          setTimeout(() => {
+            expect(callbackSpy).not.toHaveBeenCalled()
+            resolve()
+          }, 50)
+        })
+      })
     })
 
     describe('getInstance', () => {
@@ -124,18 +152,11 @@ describe('Base Component', () => {
         expect(DummyClass.getInstance(element)).toBeInstanceOf(DummyClass)
       })
 
-      it('should accept element, either passed as a CSS selector, jQuery element, or DOM element', () => {
+      it('should accept element, either passed as a CSS selector or DOM element', () => {
         createInstance()
 
         expect(DummyClass.getInstance('#foo')).toEqual(instance)
         expect(DummyClass.getInstance(element)).toEqual(instance)
-
-        const fakejQueryObject = {
-          0: element,
-          jquery: 'foo'
-        }
-
-        expect(DummyClass.getInstance(fakejQueryObject)).toEqual(instance)
       })
 
       it('should return null when there is no instance', () => {

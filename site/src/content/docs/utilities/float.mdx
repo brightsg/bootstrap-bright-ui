@@ -2,6 +2,8 @@
 title: Float
 description: Toggle floats on any element, across any breakpoint, using our responsive float utilities.
 toc: true
+utility:
+  - float
 ---
 
 import { getData } from '@libs/data'
@@ -14,17 +16,17 @@ These utility classes float an element to the left or right, or disable floating
 <div class="float-end">Float end on all viewport sizes</div><br>
 <div class="float-none">Don’t float on all viewport sizes</div>`} />
 
-Use the [clearfix helper]([[docsref:/helpers/clearfix]]) on a parent element to clear floats.
+Use the [`.d-flow-root` utility]([[docsref:/utilities/display#clearfix]]) on a parent element to clear floats.
 
 ## Responsive
 
 Responsive variations also exist for each `float` value.
 
-<Example code={`<div class="float-sm-end">Float end on viewports sized SM (small) or wider</div><br>
-<div class="float-md-end">Float end on viewports sized MD (medium) or wider</div><br>
-<div class="float-lg-end">Float end on viewports sized LG (large) or wider</div><br>
-<div class="float-xl-end">Float end on viewports sized XL (extra large) or wider</div><br>
-<div class="float-xxl-end">Float end on viewports sized XXL (extra extra large) or wider</div><br>`} />
+<Example code={`<div class="sm:float-end">Float end on viewports sized SM (small) or wider</div><br>
+<div class="md:float-end">Float end on viewports sized MD (medium) or wider</div><br>
+<div class="lg:float-end">Float end on viewports sized LG (large) or wider</div><br>
+<div class="xl:float-end">Float end on viewports sized XL (extra large) or wider</div><br>
+<div class="2xl:float-end">Float end on viewports sized 2XL (extra extra large) or wider</div><br>`} />
 
 Here are all the support classes:
 
@@ -32,9 +34,9 @@ Here are all the support classes:
 {getData('breakpoints').map((breakpoint) => {
   return (
     <Fragment>
-      <li><code>.float{breakpoint.abbr}-start</code></li>
-      <li><code>.float{breakpoint.abbr}-end</code></li>
-      <li><code>.float{breakpoint.abbr}-none</code></li>
+      <li><code>.{breakpoint.abbr}float-start</code></li>
+      <li><code>.{breakpoint.abbr}float-end</code></li>
+      <li><code>.{breakpoint.abbr}float-none</code></li>
     </Fragment>
   )
 })}

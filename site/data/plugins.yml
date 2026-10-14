@@ -14,20 +14,24 @@
   description: Expand and collapse areas of content, or create accordions.
   link: components/collapse/
 
-- name: Dropdown
-  description: Create menus of links, actions, forms, and more.
-  link: components/dropdowns/
+- name: Datepicker
+  description: Add date selection to form inputs. Built on Vanilla Calendar Pro.
+  link: forms/datepicker/
 
-- name: Modal
+- name: Dialog
   description: Add flexible and responsive dialogs to your project.
-  link: components/modal/
+  link: components/dialog/
 
-- name: Offcanvas
+- name: Menu
+  description: Create menus of links, actions, forms, and more.
+  link: components/menus/
+
+- name: Drawer
   description: Build and toggle hidden sidebars into any page.
-  link: components/offcanvas/
+  link: components/drawer/
 
 - name: Popover
-  description: Create custom overlays. Built on Popper.
+  description: Create custom overlays. Built on Floating UI.
   link: components/popovers/
 
 - name: Scrollspy
@@ -36,12 +40,16 @@
 
 - name: Tab
   description: Allow Bootstrap nav components to toggle contents.
-  link: components/navs-tabs/
+  link: components/tab/
 
 - name: Toast
   description: Show and hide notifications to your visitors.
   link: components/toasts/
 
+- name: Toggler
+  description: Toggle attributes or classes, using simple html markup
+  link: components/toggler/
+
 - name: Tooltip
-  description: Replace browser tooltips with custom ones. Built on Popper.
+  description: Replace browser tooltips with custom ones. Built on Floating UI.
   link: components/tooltips/

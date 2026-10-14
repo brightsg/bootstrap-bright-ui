@@ -1,8 +1,5 @@
-// NOTICE!!! Initially embedded in our docs this JavaScript
-// file contains elements that can help you create reproducible
-// use cases in StackBlitz for instance.
-// In a real project please adapt this content to your needs.
-// ++++++++++++++++++++++++++++++++++++++++++
+// NOTICE: Embedded as-is into StackBlitz playgrounds via `?raw` import.
+// Adapt to your needs in real projects.
 
 /*
  * JavaScript for Bootstrap's docs (https://getbootstrap.com/)
@@ -11,7 +8,12 @@
  * For details, see https://creativecommons.org/licenses/by/3.0/.
  */
 
-/* global bootstrap: false */
+import {
+  Tooltip,
+  Popover,
+  Toast,
+  Carousel
+} from '@bootstrap'
 
 export default () => {
   // --------
@@ -20,7 +22,7 @@ export default () => {
   // Instantiate all tooltips in a docs or StackBlitz
   document.querySelectorAll('[data-bs-toggle="tooltip"]')
     .forEach(tooltip => {
-      new bootstrap.Tooltip(tooltip)
+      new Tooltip(tooltip)
     })
 
   // --------
@@ -29,7 +31,7 @@ export default () => {
   // Instantiate all popovers in docs or StackBlitz
   document.querySelectorAll('[data-bs-toggle="popover"]')
     .forEach(popover => {
-      new bootstrap.Popover(popover)
+      new Popover(popover)
     })
 
   // -------------------------------
@@ -48,9 +50,16 @@ export default () => {
   }
 
   // Instantiate all toasts in docs pages only
+  // Skip toasts inside <dialog> elements; those are shown explicitly
+  // via their own trigger (e.g. the "Show toast" button in the dialog
+  // overlays example) and shouldn't auto-appear when the dialog opens.
   document.querySelectorAll('.bd-example .toast')
     .forEach(toastNode => {
-      const toast = new bootstrap.Toast(toastNode, {
+      if (toastNode.closest('dialog')) {
+        return
+      }
+
+      const toast = new Toast(toastNode, {
         autohide: false
       })
 
@@ -63,12 +72,34 @@ export default () => {
   const toastLiveExample = document.getElementById('liveToast')
 
   if (toastTrigger) {
-    const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastLiveExample)
+    const toastBootstrap = Toast.getOrCreateInstance(toastLiveExample)
     toastTrigger.addEventListener('click', () => {
       toastBootstrap.show()
     })
   }
   // js-docs-end live-toast
+
+  // Replay the sliding toast on the Transitions page
+  const slideToastTrigger = document.getElementById('slideToastBtn')
+  const slideToastEl = document.getElementById('slideToast')
+
+  if (slideToastTrigger) {
+    const slideToast = Toast.getOrCreateInstance(slideToastEl, { autohide: false })
+    slideToastTrigger.addEventListener('click', async () => {
+      await slideToast.hide()
+      slideToast.show()
+    })
+  }
+
+  const dialogToastTrigger = document.getElementById('dialogToastBtn')
+  const dialogToastEl = document.getElementById('dialogToast')
+
+  if (dialogToastTrigger) {
+    const dialogToast = Toast.getOrCreateInstance(dialogToastEl)
+    dialogToastTrigger.addEventListener('click', () => {
+      dialogToast.show()
+    })
+  }
 
   // -------------------------------
   // Alerts
@@ -80,9 +111,9 @@ export default () => {
   const appendAlert = (message, type) => {
     const wrapper = document.createElement('div')
     wrapper.innerHTML = [
-      `<div class="alert alert-${type} alert-dismissible" role="alert">`,
-      `   <div>${message}</div>`,
-      '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+      `<div class="alert theme-${type}" role="alert">`,
+      `   <p>${message}</p>`,
+      '   <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>',
       '</div>'
     ].join('')
 
@@ -97,13 +128,43 @@ export default () => {
   }
   // js-docs-end live-alert
 
+  // -------------------------------
+  // Accordion expand / collapse all
+  // -------------------------------
+  // js-docs-start accordion-expand-collapse
+  const accordion = document.getElementById('accordionExpandCollapse')
+  const toggleBtn = document.getElementById('btnAccordionToggleAll')
+
+  if (accordion && toggleBtn) {
+    const items = accordion.querySelectorAll('.accordion-item')
+    const groupName = 'accordionExpandCollapse'
+
+    toggleBtn.addEventListener('click', () => {
+      const expand = toggleBtn.getAttribute('aria-expanded') !== 'true'
+
+      for (const item of items) {
+        if (expand) {
+          item.removeAttribute('name')
+          item.open = true
+        } else {
+          item.open = false
+          item.setAttribute('name', groupName)
+        }
+      }
+
+      toggleBtn.setAttribute('aria-expanded', String(expand))
+      toggleBtn.textContent = expand ? 'Collapse all' : 'Expand all'
+    })
+  }
+  // js-docs-end accordion-expand-collapse
+
   // --------
   // Carousels
   // --------
   // Instantiate all non-autoplaying carousels in docs or StackBlitz
-  document.querySelectorAll('.carousel:not([data-bs-ride="carousel"])')
+  document.querySelectorAll('.carousel:not([data-bs-autoplay="true"])')
     .forEach(carousel => {
-      bootstrap.Carousel.getOrCreateInstance(carousel)
+      Carousel.getOrCreateInstance(carousel)
     })
 
   // -------------------------------
@@ -129,40 +190,40 @@ export default () => {
     })
 
   // -------------------------------
-  // Modal
+  // Drawer
   // -------------------------------
-  // Modal 'Varying modal content' example in docs and StackBlitz
-  // js-docs-start varying-modal-content
-  const exampleModal = document.getElementById('exampleModal')
-  if (exampleModal) {
-    exampleModal.addEventListener('show.bs.modal', event => {
-      // Button that triggered the modal
-      const button = event.relatedTarget
-      // Extract info from data-bs-* attributes
-      const recipient = button.getAttribute('data-bs-whatever')
-      // If necessary, you could initiate an Ajax request here
-      // and then do the updating in a callback.
-
-      // Update the modal's content.
-      const modalTitle = exampleModal.querySelector('.modal-title')
-      const modalBodyInput = exampleModal.querySelector('.modal-body input')
-
-      modalTitle.textContent = `New message to ${recipient}`
-      modalBodyInput.value = recipient
-    })
-  }
-  // js-docs-end varying-modal-content
-
-  // -------------------------------
-  // Offcanvas
-  // -------------------------------
-  // 'Offcanvas components' example in docs only
-  const myOffcanvas = document.querySelectorAll('.bd-example-offcanvas .offcanvas')
-  if (myOffcanvas) {
-    myOffcanvas.forEach(offcanvas => {
-      offcanvas.addEventListener('show.bs.offcanvas', event => {
+  // 'Drawer components' example in docs only
+  const myDrawer = document.querySelectorAll('.bd-example-drawer .drawer')
+  if (myDrawer) {
+    myDrawer.forEach(drawer => {
+      drawer.addEventListener('show.bs.drawer', event => {
         event.preventDefault()
       }, false)
     })
   }
+
+  // -------------------------------
+  // Motion utilities
+  // -------------------------------
+  // Replay the one-shot animation utilities (.animation-shake, .animation-pop)
+  // in docs demos by removing and re-adding the class after a reflow. The
+  // trigger typically lives in the Example toolbar via its `actions` slot.
+  document.querySelectorAll('[data-bd-replay]')
+    .forEach(trigger => {
+      const target = document.querySelector(trigger.getAttribute('data-bd-replay'))
+      if (!target) {
+        return
+      }
+
+      const animationClass = [...target.classList].find(name => name.startsWith('animation-'))
+      if (!animationClass) {
+        return
+      }
+
+      trigger.addEventListener('click', () => {
+        target.classList.remove(animationClass)
+        target.offsetHeight // eslint-disable-line no-unused-expressions
+        target.classList.add(animationClass)
+      })
+    })
 }

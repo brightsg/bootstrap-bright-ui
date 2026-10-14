@@ -1,9 +1,15 @@
 ---
 title: Reboot
 description: Reboot, a collection of element-specific CSS changes in a single file, kickstart Bootstrap to provide an elegant, consistent, and simple baseline to build upon.
-aliases: "/docs/[[config:docs_version]]/content/"
+aliases:
+ - "/docs/[[config:docs_version]]/content/"
+ - "/docs/content/"
+ - "/content/"
 toc: true
+css_layer: reboot
 ---
+
+import { getData } from '@libs/data'
 
 ## Approach
 
@@ -16,19 +22,15 @@ Here are our guidelines and reasons for choosing what to override in Reboot:
 - For easier scaling across device sizes, block elements should use `rem`s for `margin`s.
 - Keep declarations of `font`-related properties to a minimum, using `inherit` whenever possible.
 
-## CSS variables
+## Root CSS variables
 
-<AddedIn version="5.2.0"/>
+We add `:root` level CSS variables to all CSS bundles to provide real-time customization without the need to always recompile Sass. For example, consider these `:root` CSS variables for common `<body>` styles:
 
-With v5.1.1, we standardized our required `@import`s across all our CSS bundles (including `bootstrap.css`, `bootstrap-reboot.css`, and `bootstrap-grid.css`) to include `_root.scss`. This adds `:root` level CSS variables to all bundles, regardless of how many of them are used in that bundle. Ultimately Bootstrap 5 will continue to see more [CSS variables]([[docsref:/customize/css-variables]]) added over time, in order to provide more real-time customization without the need to always recompile Sass. Our approach is to take our source Sass variables and transform them into CSS variables. That way, even if you don’t use CSS variables, you still have all the power of Sass. **This is still in-progress and will take time to fully implement.**
-
-For example, consider these `:root` CSS variables for common `<body>` styles:
-
-<ScssDocs name="root-body-variables" file="scss/_root.scss" />
+<ScssDocs name="root-border-var" file="scss/_root.scss" />
 
 In practice, those variables are then applied in Reboot like so:
 
-<ScssDocs name="reboot-body-rules" file="scss/_reboot.scss" />
+<ScssDocs name="reboot-body-rules" file="scss/content/_reboot.scss" />
 
 Which allows you to make real-time customizations however you like:
 
@@ -51,36 +53,21 @@ The `<html>` and `<body>` elements are updated to provide better page-wide defau
 
 Bootstrap utilizes a “native font stack” or “system font stack” for optimum text rendering on every device and OS. These system fonts have been designed specifically with today’s devices in mind, with improved rendering on screens, variable font support, and more. Read more about [native font stacks in this *Smashing Magazine* article](https://www.smashingmagazine.com/2015/11/using-system-ui-fonts-practical-guide/).
 
-```scss
-$font-family-sans-serif:
-  // Cross-platform generic font family (default user interface font)
-  system-ui,
-  // Safari for macOS and iOS (San Francisco)
-  -apple-system,
-  // Windows
-  "Segoe UI",
-  // Android
-  Roboto,
-  // older macOS and iOS
-  "Helvetica Neue",
-  // Linux
-  "Noto Sans",
-  "Liberation Sans",
-  // Basic web fallback
-  Arial,
-  // Sans serif fallback
-  sans-serif,
-  // Emoji fonts
-  "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !default;
-```
+The stack starts with `-apple-system` and `BlinkMacSystemFont` for Apple devices, then `Segoe UI` for Windows, `Roboto` for Android, and `Noto Sans` or `Liberation Sans` for Linux. `Arial` and `sans-serif` are the web fallbacks, and four emoji fonts close the list.
+
+The stack omits the `system-ui` keyword. On some systems, `system-ui` resolves to the user interface font of the locale. That font can show non-Latin text with the wrong glyphs—see [issue #42703](https://github.com/twbs/bootstrap/issues/42703).
+
+<ScssDocs name="root-body-variables" file="scss/_root.scss" />
 
 Note that because the font stack includes emoji fonts, many common symbol/dingbat Unicode characters will be rendered as multicolored pictographs. Their appearance will vary, depending on the style used in the browser/platform’s native emoji font, and they won’t be affected by any CSS `color` styles.
 
-This `font-family` is applied to the `<body>` and automatically inherited globally throughout Bootstrap. To switch the global `font-family`, update `$font-family-base` and recompile Bootstrap.
+This `font-family` is applied to the `<body>` and automatically inherited globally throughout Bootstrap. To switch the global `font-family`, update `--body-font-family`.
 
 ## Headings
 
 All heading elements—`<h1>`—`<h6>` have their `margin-top` removed, `margin-bottom: .5rem` set, and `line-height` tightened. While headings inherit their `color` by default, you can also override it via optional CSS variable, `--bs-heading-color`.
+
+You can also use the `.h1`–`.h6` classes to style headings without using the HTML elements.
 
 <BsTable>
 | Heading | Example |
@@ -105,10 +92,13 @@ Links have a default `color` and underline applied. While links change on `:hove
 
 <Example code={`<a href="#">This is an example link</a>`} />
 
-As of v5.3.x, link `color` is set using `rgba()` and new `-rgb` CSS variables, allowing for easy customization of link color opacity. Change the link color opacity with the `--bs-link-opacity` CSS variable:
+Use [`.link-{%}`]([[docsref:/utilities/link/#link-opacity]]) utilities to change the link color opacity.
 
-<Example code={`<a href="#" style="--bs-link-opacity: .5">This is an example link</a>`} />
+<Example code={`<a href="#" class="link-50">This is an example link</a>`} />
 
+Use the theme utility classes to change the link color.
+
+<Example code={[...getData('theme-colors').map((themeColor) => `<a href="#" class="theme-${themeColor.name}">${themeColor.title} link</a>`)]} />
 
 Placeholder links—those without an `href`—are targeted with a more specific selector and have their `color` and `text-decoration` reset to their default values.
 
@@ -120,7 +110,7 @@ The `<hr>` element has been simplified. Similar to browser defaults, `<hr>`s are
 
 <Example code={`<hr>
 
-  <div class="text-success">
+  <div class="fg-success">
     <hr>
   </div>
 
@@ -132,17 +122,19 @@ The `<hr>` element has been simplified. Similar to browser defaults, `<hr>`s are
 All lists—`<ul>`, `<ol>`, and `<dl>`—have their `margin-top` removed and a `margin-bottom: 1rem`. Nested lists have no `margin-bottom`. We’ve also reset the `padding-left` on `<ul>` and `<ol>` elements.
 
 <div class="bd-example">
-* All lists have their top margin removed
-* And their bottom margin normalized
-* Nested lists have no bottom margin
-  * This way they have a more even appearance
-  * Particularly when followed by more list items
-* The left padding has also been reset
+
+- All lists have their top margin removed
+- And their bottom margin normalized
+- Nested lists have no bottom margin
+  - This way they have a more even appearance
+  - Particularly when followed by more list items
+- The left padding has also been reset
 
 1. Here’s an ordered list
 2. With a few list items
 3. It has the same overall look
 4. As the previous unordered list
+
 </div>
 
 For simpler styling, clear hierarchy, and better spacing, description lists have updated `margin`s. `<dd>`s reset `margin-left` to `0` and add `margin-bottom: .5rem`. `<dt>`s are **bolded**.
@@ -184,7 +176,7 @@ For indicating variables use the `<var>` tag.
 Use the `<kbd>` to indicate input that is typically entered via keyboard.
 
 <Example code={`To switch directories, type <kbd>cd</kbd> followed by the name of the directory.<br>
-To edit settings, press <kbd><kbd>Ctrl</kbd> + <kbd>,</kbd></kbd>`} />
+To edit settings, press <kbd>Ctrl</kbd> + <kbd>,</kbd>`} />
 
 ## Sample output
 
@@ -441,3 +433,31 @@ Since `[hidden]` is not compatible with jQuery’s `$(...).hide()` and `$(...).s
 </Callout>
 
 To merely toggle the visibility of an element, meaning its `display` is not modified and the element can still affect the flow of the document, use [the `.invisible` class]([[docsref:/utilities/visibility]]) instead.
+
+## iframe color-scheme
+
+The `<iframe>` element is updated to set `color-scheme: light dark`. A browser paints an opaque `background: canvas` behind an iframe when the embedded document uses a different color scheme than the iframe element. On a dark page that shows as a white box.
+
+An embedded document follows the system preference. It cannot see your `data-bs-theme` attribute. We therefore pin every iframe to the system preference too. This keeps an embed transparent, also when you force a theme with `data-bs-theme`.
+
+<Example code={`<div class="bg-body fg-body p-3" data-bs-theme="dark">
+    <iframe class="w-100" style="color-scheme: unset" src="data:text/html,<!DOCTYPE html><html><meta name='color-scheme' content='light dark'><body style='background-color:transparent;color:gray;'><h4>Default iframe</h4></body></html>"></iframe>
+    <iframe class="w-100" src="data:text/html,<!DOCTYPE html><html><meta name='color-scheme' content='light dark'><body style='background-color:transparent;color:gray;'><h4>iframe with color-scheme: light-dark</h4></body></html>"></iframe>
+    <iframe class="w-100" src="data:text/html,<!DOCTYPE html><html><body style='background-color:transparent;color:gray;'><h4>Embed that declares no color scheme</h4></body></html>"></iframe>
+  </div>`} />
+
+The first two embeds declare `<meta name="color-scheme" content="light dark">`, so they follow the system preference and stay transparent. The third declares nothing, like most third-party embeds. Set your system to dark mode to see the browser paint a white box behind it. Our rule cannot prevent that — read the next section.
+
+### Third-party embeds with no dark mode
+
+Some third-party embeds have no dark mode. Payment buttons, comment widgets, and review widgets are common examples. The browser paints a white background behind such an embed when the system is in dark mode. This is a browser safeguard. It keeps the light content of the embed readable. Bootstrap cannot remove it for you.
+
+Add the `.color-scheme-light` [color scheme utility]([[docsref:/utilities/color-scheme]]) to that one iframe. The background becomes transparent again.
+
+```html
+<iframe class="color-scheme-light" src="..."></iframe>
+```
+
+<Callout type="warning">
+Use this only for an embed that has no dark mode. Safari and Firefox apply the value to the embedded document. An embed that has a dark mode then shows in light mode.
+</Callout>

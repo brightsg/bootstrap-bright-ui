@@ -9,8 +9,7 @@
  */
 
 @media (min-width: 768px) {
-  .sidebar .offcanvas-lg {
-    position: -webkit-sticky;
+  .sidebar .lg\:drawer {
     position: sticky;
     top: 48px;
   }

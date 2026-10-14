@@ -5,11 +5,6 @@ import { zPrefixedVersionSemver, zVersionMajorMinor, zVersionSemver } from './va
 
 // The config schema used to validate the config file content and ensure all values required by the site are valid.
 const configSchema = z.object({
-  algolia: z.object({
-    api_key: z.string(),
-    app_id: z.string(),
-    index_name: z.string()
-  }),
   analytics: z.object({
     fathom_site: z.string()
   }),
@@ -22,22 +17,20 @@ const configSchema = z.object({
   blog: z.url(),
   cdn: z.object({
     css: z.url(),
-    css_rtl: z.url(),
     css_hash: z.string(),
-    css_rtl_hash: z.string(),
     js: z.url(),
     js_hash: z.string(),
     js_bundle: z.url(),
     js_bundle_hash: z.string(),
-    popper: z.url(),
-    popper_esm: z.url(),
-    popper_hash: z.string()
+    floating_ui_esm: z.url(),
+    vanilla_calendar_pro_esm: z.url()
   }),
   current_version: zVersionSemver,
   current_ruby_version: zVersionSemver,
   description: z.string(),
   docs_version: zVersionMajorMinor,
   docsDir: z.string(),
+  examples: z.url(),
   download: z.object({
     dist: z.url(),
     dist_examples: z.url(),

@@ -1,6 +1,6 @@
 import Tab from '../../src/tab.js'
 import {
-  clearFixture, createEvent, getFixture, jQueryMock
+  clearFixture, createEvent, getFixture
 } from '../helpers/fixture.js'
 
 describe('Tab', () => {
@@ -33,21 +33,19 @@ describe('Tab', () => {
 
       const tabEl = fixtureEl.querySelector('[href="#home"]')
       const tabBySelector = new Tab('[href="#home"]')
-      const tabByElement = new Tab(tabEl)
-
       expect(tabBySelector._element).toEqual(tabEl)
+
+      const tabByElement = new Tab(tabEl)
       expect(tabByElement._element).toEqual(tabEl)
     })
 
-    it('Do not Throw exception if not parent', () => {
-      fixtureEl.innerHTML = [
-        fixtureEl.innerHTML = '<div class=""><div class="nav-link"></div></div>'
-      ].join('')
+    it('should throw a TypeError when the element has no tab-panel parent', () => {
+      fixtureEl.innerHTML = '<div class=""><div class="nav-link"></div></div>'
       const navEl = fixtureEl.querySelector('.nav-link')
 
       expect(() => {
         new Tab(navEl) // eslint-disable-line no-new
-      }).not.toThrowError(TypeError)
+      }).toThrowError(TypeError)
     })
   })
 
@@ -179,41 +177,43 @@ describe('Tab', () => {
       })
     })
 
-    it('should work with tab id being an int', done => {
-      fixtureEl.innerHTML = [
-        '<div class="card-header d-block d-inline-block">',
-        '  <ul class="nav nav-tabs card-header-tabs" id="page_tabs">',
-        '    <li class="nav-item">',
-        '      <a class="nav-link" draggable="false" data-toggle="tab" href="#tab1">',
-        '        Working Tab 1 (#tab1)',
-        '     </a>',
-        '    </li>',
-        '    <li class="nav-item">',
-        '      <a id="trigger2" class="nav-link" draggable="false" data-toggle="tab" href="#2">',
-        '        Tab with numeric ID should work (#2)',
-        '      </a>',
-        '    </li>',
-        '  </ul>',
-        '</div>',
-        '<div class="card-body">',
-        '  <div class="tab-content" id="page_content">',
-        '     <div class="tab-pane fade" id="tab1">',
-        '      Working Tab 1 (#tab1) Content Here',
-        '  </div>',
-        '  <div class="tab-pane fade" id="2">',
-        '      Working Tab 2 (#2) with numeric ID',
-        '  </div>',
-        '</div>'
-      ].join('')
-      const profileTriggerEl = fixtureEl.querySelector('#trigger2')
-      const tab = new Tab(profileTriggerEl)
+    it('should work with tab id being an int', () => {
+      return new Promise(resolve => {
+        fixtureEl.innerHTML = [
+          '<div class="card-header d-block d-inline-block">',
+          '  <ul class="nav nav-tabs card-header-tabs" id="page_tabs">',
+          '    <li class="nav-item">',
+          '      <a class="nav-link" draggable="false" data-toggle="tab" href="#tab1">',
+          '        Working Tab 1 (#tab1)',
+          '     </a>',
+          '    </li>',
+          '    <li class="nav-item">',
+          '      <a id="trigger2" class="nav-link" draggable="false" data-toggle="tab" href="#2">',
+          '        Tab with numeric ID should work (#2)',
+          '      </a>',
+          '    </li>',
+          '  </ul>',
+          '</div>',
+          '<div class="card-body">',
+          '  <div class="tab-content" id="page_content">',
+          '     <div class="tab-pane fade" id="tab1">',
+          '      Working Tab 1 (#tab1) Content Here',
+          '  </div>',
+          '  <div class="tab-pane fade" id="2">',
+          '      Working Tab 2 (#2) with numeric ID',
+          '  </div>',
+          '</div>'
+        ].join('')
+        const profileTriggerEl = fixtureEl.querySelector('#trigger2')
+        const tab = new Tab(profileTriggerEl)
 
-      profileTriggerEl.addEventListener('shown.bs.tab', () => {
-        expect(fixtureEl.querySelector(`#${CSS.escape('2')}`)).toHaveClass('active')
-        done()
+        profileTriggerEl.addEventListener('shown.bs.tab', () => {
+          expect(fixtureEl.querySelector(`#${CSS.escape('2')}`)).toHaveClass('active')
+          resolve()
+        })
+
+        tab.show()
       })
-
-      tab.show()
     })
 
     it('should not fire shown when show is prevented', () => {
@@ -449,6 +449,57 @@ describe('Tab', () => {
         tab.show()
       })
     })
+
+    it('should ignore stale completion after rapid activation', async () => {
+      fixtureEl.innerHTML = [
+        '<div class="nav" role="tablist">',
+        '  <button id="tab1" class="nav-link active" data-bs-target="#pane1" role="tab">One</button>',
+        '  <button id="tab2" class="nav-link" data-bs-target="#pane2" role="tab">Two</button>',
+        '  <button id="tab3" class="nav-link" data-bs-target="#pane3" role="tab">Three</button>',
+        '</div>',
+        '<div id="pane1" class="active show" role="tabpanel"></div>',
+        '<div id="pane2" style="transition: opacity 0.1s" role="tabpanel"></div>',
+        '<div id="pane3" style="transition: opacity 0.1s" role="tabpanel"></div>'
+      ].join('')
+
+      const tab2El = fixtureEl.querySelector('#tab2')
+      const tab3El = fixtureEl.querySelector('#tab3')
+      const tab2 = new Tab(tab2El)
+      const tab3 = new Tab(tab3El)
+      const shown2 = jasmine.createSpy('shown2')
+      const shown3 = jasmine.createSpy('shown3')
+      const pending = []
+
+      tab2El.addEventListener('shown.bs.tab', shown2)
+      tab3El.addEventListener('shown.bs.tab', shown3)
+      spyOn(Tab.prototype, '_queueCallback').and.callFake((callback, element, isAnimated = true) => {
+        if (!isAnimated) {
+          callback()
+          return Promise.resolve()
+        }
+
+        return new Promise(resolve => {
+          pending.push(() => {
+            callback()
+            resolve()
+          })
+        })
+      })
+
+      const tab2Shown = tab2.show()
+      const tab3Shown = tab3.show()
+
+      pending[0]()
+      pending[1]()
+      await Promise.all([tab2Shown, tab3Shown])
+
+      expect(tab2El.getAttribute('aria-selected')).toEqual('false')
+      expect(tab2El.getAttribute('tabindex')).toEqual('-1')
+      expect(tab3El.getAttribute('aria-selected')).toEqual('true')
+      expect(tab3El.hasAttribute('tabindex')).toBeFalse()
+      expect(shown2).not.toHaveBeenCalled()
+      expect(shown3).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('dispose', () => {
@@ -543,6 +594,30 @@ describe('Tab', () => {
       expect(spyKeydown).toHaveBeenCalled()
       expect(spyGet).not.toHaveBeenCalled()
 
+      expect(spyStop).not.toHaveBeenCalled()
+      expect(spyPrevent).not.toHaveBeenCalled()
+    })
+
+    it('if arrow key is pressed with a modifier (e.g. Alt+Left), ignore it', () => {
+      fixtureEl.innerHTML = [
+        '<ul class="nav">',
+        '  <li class="nav-link" data-bs-toggle="tab"></li>',
+        '</ul>'
+      ].join('')
+
+      const tabEl = fixtureEl.querySelector('.nav-link')
+      const tab = new Tab(tabEl)
+
+      const keydown = createEvent('keydown')
+      keydown.key = 'ArrowLeft'
+      keydown.altKey = true
+      const spyStop = spyOn(Event.prototype, 'stopPropagation').and.callThrough()
+      const spyPrevent = spyOn(Event.prototype, 'preventDefault').and.callThrough()
+      const spyGet = spyOn(tab, '_getChildren')
+
+      tabEl.dispatchEvent(keydown)
+
+      expect(spyGet).not.toHaveBeenCalled()
       expect(spyStop).not.toHaveBeenCalled()
       expect(spyPrevent).not.toHaveBeenCalled()
     })
@@ -827,66 +902,6 @@ describe('Tab', () => {
     })
   })
 
-  describe('jQueryInterface', () => {
-    it('should create a tab', () => {
-      fixtureEl.innerHTML = '<div class="nav"><div class="nav-link"></div></div>'
-
-      const div = fixtureEl.querySelector('.nav > div')
-
-      jQueryMock.fn.tab = Tab.jQueryInterface
-      jQueryMock.elements = [div]
-
-      jQueryMock.fn.tab.call(jQueryMock)
-
-      expect(Tab.getInstance(div)).not.toBeNull()
-    })
-
-    it('should not re create a tab', () => {
-      fixtureEl.innerHTML = '<div class="nav"><div class="nav-link"></div></div>'
-
-      const div = fixtureEl.querySelector('.nav > div')
-      const tab = new Tab(div)
-
-      jQueryMock.fn.tab = Tab.jQueryInterface
-      jQueryMock.elements = [div]
-
-      jQueryMock.fn.tab.call(jQueryMock)
-
-      expect(Tab.getInstance(div)).toEqual(tab)
-    })
-
-    it('should call a tab method', () => {
-      fixtureEl.innerHTML = '<div class="nav"><div class="nav-link"></div></div>'
-
-      const div = fixtureEl.querySelector('.nav > div')
-      const tab = new Tab(div)
-
-      const spy = spyOn(tab, 'show')
-
-      jQueryMock.fn.tab = Tab.jQueryInterface
-      jQueryMock.elements = [div]
-
-      jQueryMock.fn.tab.call(jQueryMock, 'show')
-
-      expect(Tab.getInstance(div)).toEqual(tab)
-      expect(spy).toHaveBeenCalled()
-    })
-
-    it('should throw error on undefined method', () => {
-      fixtureEl.innerHTML = '<div class="nav"><div class="nav-link"></div></div>'
-
-      const div = fixtureEl.querySelector('.nav > div')
-      const action = 'undefinedMethod'
-
-      jQueryMock.fn.tab = Tab.jQueryInterface
-      jQueryMock.elements = [div]
-
-      expect(() => {
-        jQueryMock.fn.tab.call(jQueryMock, action)
-      }).toThrowError(TypeError, `No method named "${action}"`)
-    })
-  })
-
   describe('getInstance', () => {
     it('should return null if there is no instance', () => {
       expect(Tab.getInstance(fixtureEl)).toBeNull()
@@ -951,16 +966,16 @@ describe('Tab', () => {
       })
     })
 
-    it('selected tab should deactivate previous selected link in dropdown', () => {
+    it('selected tab should deactivate previous selected link in menu', () => {
       fixtureEl.innerHTML = [
         '<ul class="nav nav-tabs">',
         '  <li class="nav-item"><a class="nav-link" href="#home" data-bs-toggle="tab">Home</a></li>',
         '  <li class="nav-item"><a class="nav-link" href="#profile" data-bs-toggle="tab">Profile</a></li>',
-        '  <li class="nav-item dropdown">',
-        '    <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Dropdown</a>',
-        '    <div class="dropdown-menu">',
-        '      <a class="dropdown-item active" href="#dropdown1" id="dropdown1-tab" data-bs-toggle="tab">@fat</a>',
-        '      <a class="dropdown-item" href="#dropdown2" id="dropdown2-tab" data-bs-toggle="tab">@mdo</a>',
+        '  <li class="nav-item">',
+        '    <a class="nav-link active" href="#" role="button" data-bs-toggle="menu" aria-expanded="false">Menu</a>',
+        '    <div class="menu">',
+        '      <a class="menu-item active" href="#menu1" id="menu1-tab" data-bs-toggle="tab">@fat</a>',
+        '      <a class="menu-item" href="#menu2" id="menu2-tab" data-bs-toggle="tab">@mdo</a>',
         '    </div>',
         '  </li>',
         '</ul>'
@@ -970,18 +985,18 @@ describe('Tab', () => {
 
       firstLiLinkEl.click()
       expect(firstLiLinkEl).toHaveClass('active')
-      expect(fixtureEl.querySelector('li:last-child a')).not.toHaveClass('active')
-      expect(fixtureEl.querySelector('li:last-child .dropdown-menu a:first-child')).not.toHaveClass('active')
+      expect(fixtureEl.querySelector('li:last-child > [data-bs-toggle="menu"]')).not.toHaveClass('active')
+      expect(fixtureEl.querySelector('li:last-child .menu a:first-child')).not.toHaveClass('active')
     })
 
-    it('selecting a dropdown tab does not activate another', () => {
+    it('selecting a menu tab does not activate another', () => {
       const nav1 = [
         '<ul class="nav nav-tabs" id="nav1">',
         '  <li class="nav-item active"><a class="nav-link" href="#home" data-bs-toggle="tab">Home</a></li>',
-        '  <li class="nav-item dropdown">',
-        '    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Dropdown</a>',
-        '    <div class="dropdown-menu">',
-        '      <a class="dropdown-item" href="#dropdown1" id="dropdown1-tab" data-bs-toggle="tab">@fat</a>',
+        '  <li class="nav-item">',
+        '    <a class="nav-link" href="#" role="button" data-bs-toggle="menu" aria-expanded="false">Menu</a>',
+        '    <div class="menu">',
+        '      <a class="menu-item" href="#menu1" id="menu1-tab" data-bs-toggle="tab">@fat</a>',
         '    </div>',
         '  </li>',
         '</ul>'
@@ -989,10 +1004,10 @@ describe('Tab', () => {
       const nav2 = [
         '<ul class="nav nav-tabs" id="nav2">',
         '  <li class="nav-item active"><a class="nav-link" href="#home" data-bs-toggle="tab">Home</a></li>',
-        '  <li class="nav-item dropdown">',
-        '    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Dropdown</a>',
-        '    <div class="dropdown-menu">',
-        '      <a class="dropdown-item" href="#dropdown1" id="dropdown1-tab" data-bs-toggle="tab">@fat</a>',
+        '  <li class="nav-item">',
+        '    <a class="nav-link" href="#" role="button" data-bs-toggle="menu" aria-expanded="false">Menu</a>',
+        '    <div class="menu">',
+        '      <a class="menu-item" href="#menu1" id="menu1-tab" data-bs-toggle="tab">@fat</a>',
         '    </div>',
         '  </li>',
         '</ul>'
@@ -1000,35 +1015,35 @@ describe('Tab', () => {
 
       fixtureEl.innerHTML = nav1 + nav2
 
-      const firstDropItem = fixtureEl.querySelector('#nav1 .dropdown-item')
+      const firstMenuItem = fixtureEl.querySelector('#nav1 .menu-item')
 
-      firstDropItem.click()
-      expect(firstDropItem).toHaveClass('active')
-      expect(fixtureEl.querySelector('#nav1 .dropdown-toggle')).toHaveClass('active')
-      expect(fixtureEl.querySelector('#nav2 .dropdown-toggle')).not.toHaveClass('active')
-      expect(fixtureEl.querySelector('#nav2 .dropdown-item')).not.toHaveClass('active')
+      firstMenuItem.click()
+      expect(firstMenuItem).toHaveClass('active')
+      expect(fixtureEl.querySelector('#nav1 [data-bs-toggle="menu"]')).toHaveClass('active')
+      expect(fixtureEl.querySelector('#nav2 [data-bs-toggle="menu"]')).not.toHaveClass('active')
+      expect(fixtureEl.querySelector('#nav2 .menu-item')).not.toHaveClass('active')
     })
 
-    it('should support li > .dropdown-item', () => {
+    it('should support li > .menu-item', () => {
       fixtureEl.innerHTML = [
         '<ul class="nav nav-tabs">',
         '  <li class="nav-item"><a class="nav-link active" href="#home" data-bs-toggle="tab">Home</a></li>',
         '  <li class="nav-item"><a class="nav-link" href="#profile" data-bs-toggle="tab">Profile</a></li>',
-        '  <li class="nav-item dropdown">',
-        '    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Dropdown</a>',
-        '    <ul class="dropdown-menu">',
-        '      <li><a class="dropdown-item" href="#dropdown1" id="dropdown1-tab" data-bs-toggle="tab">@fat</a></li>',
-        '      <li><a class="dropdown-item" href="#dropdown2" id="dropdown2-tab" data-bs-toggle="tab">@mdo</a></li>',
-        '    </ul>',
+        '  <li class="nav-item">',
+        '    <a class="nav-link" href="#" role="button" data-bs-toggle="menu" aria-expanded="false">Menu</a>',
+        '    <div class="menu">',
+        '      <a class="menu-item" href="#menu1" id="menu1-tab" data-bs-toggle="tab">@fat</a>',
+        '      <a class="menu-item" href="#menu2" id="menu2-tab" data-bs-toggle="tab">@mdo</a>',
+        '    </div>',
         '  </li>',
         '</ul>'
       ].join('')
 
-      const dropItems = fixtureEl.querySelectorAll('.dropdown-item')
+      const menuItems = fixtureEl.querySelectorAll('.menu-item')
 
-      dropItems[1].click()
-      expect(dropItems[0]).not.toHaveClass('active')
-      expect(dropItems[1]).toHaveClass('active')
+      menuItems[1].click()
+      expect(menuItems[0]).not.toHaveClass('active')
+      expect(menuItems[1]).toHaveClass('active')
       expect(fixtureEl.querySelector('.nav-link')).not.toHaveClass('active')
     })
 
@@ -1142,6 +1157,37 @@ describe('Tab', () => {
 
         secondNavEl.click()
       })
+    })
+
+    it('should activate and show a pane in the same frame', async () => {
+      fixtureEl.innerHTML = [
+        '<ul class="nav nav-tabs" role="tablist">',
+        '  <li class="nav-item" role="presentation">',
+        '    <button type="button" id="firstNav" class="nav-link active" data-bs-target="#home" role="tab" data-bs-toggle="tab">Home</button>',
+        '  </li>',
+        '  <li class="nav-item" role="presentation">',
+        '    <button type="button" id="secondNav" class="nav-link" data-bs-target="#profile" role="tab" data-bs-toggle="tab">Profile</button>',
+        '  </li>',
+        '</ul>',
+        '<div class="tab-content">',
+        '  <div role="tabpanel" class="tab-pane show active" id="home">test 1</div>',
+        '  <div role="tabpanel" class="tab-pane" id="profile">test 2</div>',
+        '</div>'
+      ].join('')
+
+      const homeEl = fixtureEl.querySelector('#home')
+      const profileEl = fixtureEl.querySelector('#profile')
+      const tab = new Tab(fixtureEl.querySelector('#secondNav'))
+
+      const shown = tab.show()
+
+      // The CSS drives the fade off .active, so both classes land at once
+      expect(profileEl).toHaveClass('active')
+      expect(profileEl).toHaveClass('show')
+      expect(homeEl).not.toHaveClass('active')
+      expect(homeEl).not.toHaveClass('show')
+
+      await shown
     })
 
     it('should add show class to tab panes if there is a `.fade` class', () => {

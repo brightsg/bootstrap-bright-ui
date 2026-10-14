@@ -1,14 +1,7 @@
 import fs from 'node:fs'
 import { load as yamlLoad } from 'js-yaml'
 import { z } from 'zod'
-import {
-  zHexColor,
-  zLanguageCode,
-  zNamedHexColors,
-  zPxSizeOrEmpty,
-  zVersionMajorMinor,
-  zVersionSemver
-} from './validation'
+import { zLanguageCode, zPxSizeOrEmpty, zVersionMajorMinor, zVersionSemver } from './validation'
 import { capitalizeFirstLetter } from './utils'
 
 // An object containing all the data types and their associated schema. The key should match the name of the data file
@@ -23,7 +16,11 @@ const dataDefinitions = {
       container: zPxSizeOrEmpty
     })
     .array(),
-  colors: zNamedHexColors(13),
+  colors: z
+    .object({
+      name: z.string()
+    })
+    .array(),
   'core-team': z
     .object({
       name: z.string(),
@@ -53,7 +50,6 @@ const dataDefinitions = {
         .array()
     })
     .array(),
-  grays: zNamedHexColors(9),
   icons: z.object({
     preferred: z
       .object({
@@ -71,18 +67,29 @@ const dataDefinitions = {
   plugins: z
     .object({
       description: z.string(),
-      link: z.string().startsWith('components/'),
+      link: z.string().regex(/^(components|forms)\//),
       name: z.string()
     })
     .array(),
   sidebar: z
     .object({
       title: z.string(),
+      section: z.string().optional(),
       icon: z.string().optional(),
       icon_color: z.string().optional(),
       pages: z
         .object({
-          title: z.string()
+          title: z.string().optional(),
+          href: z.string().optional(),
+          group: z.string().optional(),
+          meta: z.object({ added: z.string() }).array().optional(),
+          pages: z
+            .object({
+              title: z.string(),
+              meta: z.object({ added: z.string() }).array().optional()
+            })
+            .array()
+            .optional()
         })
         .array()
         .optional()
@@ -90,9 +97,7 @@ const dataDefinitions = {
     .array(),
   'theme-colors': z
     .object({
-      name: z.string(),
-      hex: zHexColor,
-      contrast_color: z.union([z.literal('dark'), z.literal('white')]).optional()
+      name: z.string()
     })
     .array()
     .transform((val) => {
@@ -109,6 +114,13 @@ const dataDefinitions = {
     .array()
 } satisfies Record<string, DataSchema>
 
+// Inferred types for individual data files. Exported so consumers can avoid
+// re-deriving them via `ReturnType<typeof getData<'sidebar'>>` and don't have
+// to fall back to `any` when iterating nested arrays.
+export type SidebarGroup = z.infer<typeof dataDefinitions.sidebar>[number]
+export type SidebarItem = NonNullable<SidebarGroup['pages']>[number]
+export type SidebarSubItem = NonNullable<SidebarItem['pages']>[number]
+
 let data = new Map<DataType, z.infer<DataSchema>>()
 
 // A helper to get data loaded fom a yml file in the `./site/data/` directory. If the data does not match its associated
@@ -117,7 +129,7 @@ let data = new Map<DataType, z.infer<DataSchema>>()
 export function getData<TType extends DataType>(type: TType): z.infer<(typeof dataDefinitions)[TType]> {
   if (data.has(type)) {
     // Returns the data if it has already been loaded.
-    return data.get(type)
+    return data.get(type) as z.infer<(typeof dataDefinitions)[TType]>
   }
 
   const dataPath = `./site/data/${type}.yml`
@@ -127,7 +139,7 @@ export function getData<TType extends DataType>(type: TType): z.infer<(typeof da
     const rawData = yamlLoad(fs.readFileSync(dataPath, 'utf8'))
 
     // Parse the data using the data schema to validate its content and get back a fully typed data object.
-    const parsedData = dataDefinitions[type].parse(rawData)
+    const parsedData = dataDefinitions[type].parse(rawData) as z.infer<(typeof dataDefinitions)[TType]>
 
     // Cache the data.
     data.set(type, parsedData)
