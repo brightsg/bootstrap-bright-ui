@@ -1,96 +1,118 @@
-// stylelint-disable selector-max-type, selector-no-qualifying-type
+@use "../../../scss/layout/breakpoints" as *;
+@use "../../../scss/mixins/border-radius" as *;
 
-.bd-toc {
-  font-size: .875rem;
-  container-type: inline-size;
+@layer custom {
+  .bd-toc {
+    container-type: inline-size;
+    font-size: var(--font-size-sm);
 
-  @include media-breakpoint-up(lg) {
-    position: sticky;
-    top: 5rem;
-    right: 0;
-    z-index: 2;
-    height: subtract(100vh, 7rem);
-    overflow-y: auto;
-  }
+    @include media-breakpoint-up(lg) {
+      position: sticky;
+      top: var(--bd-navbar-offset);
+      right: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      justify-content: flex-start;
+      width: 100%;
+      height: calc(100vh - var(--bd-navbar-offset) - 2.25rem - var(--bd-toc-footer-overlap, 0px));
+      padding-inline-end: .25rem;
+      margin-inline-end: -.25rem;
+      overflow-y: auto;
 
-  nav {
-    @include font-size(.875rem);
+      .lg\:drawer {
+        flex-grow: 0 !important; // stylelint-disable-line declaration-no-important
+      }
 
-    ul {
-      padding-left: 0;
-      margin-bottom: 0;
-      list-style: none;
+      nav {
+        width: 100%;
+      }
 
-      ul {
-        padding-left: 1rem;
+      // stylelint-disable-next-line selector-max-id
+      #carbonads {
+        position: sticky;
+        bottom: 0;
+        flex-shrink: 0;
       }
     }
 
-    a {
-      display: block;
-      padding: .125rem 0 .125rem .75rem;
-      color: inherit;
-      text-decoration: none;
-      border-left: .125rem solid transparent;
-
-      &:hover,
-      &.active {
-        color: var(--bd-toc-color);
-        border-left-color: var(--bd-toc-color);
+    @include media-breakpoint-down(lg) {
+      .lg\:drawer {
+        border-inline-start-color: var(--bs-border-color);
+        box-shadow: var(--bs-box-shadow-lg);
       }
+    }
+
+    .nav {
+      --bs-nav-gap: 0;
+      --bs-nav-link-justify: flex-start;
+      --bs-nav-link-padding-x: .75rem;
+      --bs-nav-link-padding-y: .0625rem;
+      --bs-nav-link-font-size: .875rem;
+      --bs-nav-link-hover-bg: transparent;
+      --bs-nav-link-active-bg: transparent;
+      --bs-nav-link-active-color: var(--bs-fg-body);
+
+      .nav .nav-link {
+        padding-inline-start: 1.75rem;
+      }
+    }
+
+    .nav-link {
+      align-items: flex-start;
+      line-height: 1.35;
+      text-wrap: pretty;
+      white-space: normal;
+      border-inline-start: .125rem solid transparent;
+      @include border-radius(0);
 
       &.active {
         font-weight: 500;
+        border-inline-start-color: var(--bs-fg-body);
       }
 
       code {
         font: inherit;
+        overflow-wrap: anywhere;
       }
     }
   }
-}
 
-.bd-toc-toggle {
-  display: flex;
-  align-items: center;
-
-  @include media-breakpoint-down(sm) {
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  @include media-breakpoint-down(md) {
-    color: var(--bs-body-color);
-    border: 1px solid var(--bs-border-color);
-    @include border-radius(var(--bs-border-radius));
-
-    &:hover,
-    &:focus,
-    &:active,
-    &[aria-expanded="true"] {
-      color: var(--bd-violet);
-      background-color: var(--bs-body-bg);
-      border-color: var(--bd-violet);
+  // stylelint-disable-next-line selector-id-pattern, selector-max-id
+  #bdTocSidebar {
+    @include media-breakpoint-up(lg) {
+      flex: 1 1 auto;
+      min-height: 0;
+      margin-bottom: auto;
+      overflow-y: auto;
+      mask-image:
+        linear-gradient(
+          to bottom,
+          transparent 0,
+          #000 var(--bd-toc-fade-top, 0),
+          #000 calc(100% - var(--bd-toc-fade-bottom, 0)),
+          transparent 100%
+        );
     }
 
-    &:focus,
-    &[aria-expanded="true"] {
-      box-shadow: 0 0 0 3px rgba(var(--bd-violet-rgb), .25);
-    }
-  }
-}
-
-.bd-toc-collapse {
-  @include media-breakpoint-down(md) {
-    nav {
-      padding: 1.25rem 1.25rem 1.25rem 1rem;
-      background-color: var(--bs-tertiary-bg);
-      border: 1px solid var(--bs-border-color);
-      @include border-radius(var(--bs-border-radius));
+    @include media-breakpoint-down(lg) {
+      height: auto;
+      max-height: 80dvh;
     }
   }
 
-  @include media-breakpoint-up(md) {
-    display: block !important; // stylelint-disable-line declaration-no-important
+  .bd-toc-toggle {
+    position: fixed;
+    right: 0;
+    bottom: 1rem;
+    left: 0;
+    z-index: 1030;
+    margin-inline: auto;
+    font-size: var(--font-size-sm);
+
+    > .btn-solid {
+      box-shadow: var(--bs-box-shadow-lg);
+    }
   }
 }

@@ -2,6 +2,8 @@
 title: Tables
 description: Documentation and examples for opt-in styling of tables (given their prevalent use in JavaScript plugins) with Bootstrap.
 toc: true
+css_layer: content
+css_media: container
 ---
 
 import { getData } from '@libs/data'
@@ -16,54 +18,46 @@ Using the most basic table markup, here’s how `.table`-based tables look in Bo
 
 ## Variants
 
-Use contextual classes to color tables, table rows or individual cells.
+Use theme-specific color classes to style tables, table rows, or individual cells. These adapt to color modes as well.
 
-<Callout>
-**Heads up!** Because of the more complicated CSS used to generate our table variants, they most likely won’t see color mode adaptive styling until v6.
-</Callout>
-
-<div class="bd-example">
-  <table class="table">
-    <thead>
-      <tr>
-        <th scope="col">Class</th>
-        <th scope="col">Heading</th>
-        <th scope="col">Heading</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th scope="row">Default</th>
-        <td>Cell</td>
-        <td>Cell</td>
-      </tr>
-      {getData('theme-colors').map((themeColor) => {
-        return (
-          <tr class={`table-${themeColor.name}`}>
-            <th scope="row">{themeColor.title}</th>
-            <td>Cell</td>
-            <td>Cell</td>
-          </tr>
-        )
-      })}
-    </tbody>
-  </table>
-</div>
-
-<Code code={[
+<Example code={[
+  `<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Class</th>
+      <th scope="col">Heading</th>
+      <th scope="col">Heading</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">Default</th>
+      <td>Cell</td>
+      <td>Cell</td>
+    </tr>`,
+  ...getData('theme-colors').map((themeColor) => `    <tr class="theme-${themeColor.name}">
+      <th scope="row">${themeColor.title}</th>
+      <td>Cell</td>
+      <td>Cell</td>
+    </tr>`),
+  `  </tbody>
+</table>`
+]} customMarkup={[
   `<!-- On tables -->`,
-  ...getData('theme-colors').map((themeColor) => `<table class="table table-${themeColor.name}">...</table>`),
+  ...getData('theme-colors').map((themeColor) => `<table class="table theme-${themeColor.name}">...</table>`),
   `
+
 <!-- On rows -->`,
-  ...getData('theme-colors').map((themeColor) => `<tr class="table-${themeColor.name}">...</tr>`),
+  ...getData('theme-colors').map((themeColor) => `<tr class="theme-${themeColor.name}">...</tr>`),
   `
+\n\n
 <!-- On cells (\`td\` or \`th\`) -->
 <tr>`,
-  ...getData('theme-colors').map((themeColor) => `  <td class="table-${themeColor.name}">...</td>`),
+  ...getData('theme-colors').map((themeColor) => `  <td class="theme-${themeColor.name}">...</td>`),
   `</tr>`
-]} lang="html" />
+]} />
 
-<Callout name="warning-color-assistive-technologies" />
+<Details name="warning-color-assistive-technologies" />
 
 ## Accented tables
 
@@ -81,13 +75,13 @@ Use `.table-striped-columns` to add zebra-striping to any table column.
 
 These classes can also be added to table variants:
 
-<Table class="table table-dark table-striped" />
+<Table class="table table-striped" theme="dark" />
 
-<Table class="table table-dark table-striped-columns" />
+<Table class="table table-striped-columns" theme="dark" />
 
-<Table class="table table-success table-striped" />
+<Table class="table theme-success table-striped" />
 
-<Table class="table table-success table-striped-columns" />
+<Table class="table theme-success table-striped-columns" />
 
 ### Hoverable rows
 
@@ -95,7 +89,7 @@ Add `.table-hover` to enable a hover state on table rows within a `<tbody>`.
 
 <Table class="table table-hover" />
 
-<Table class="table table-dark table-hover" />
+<Table class="table table-hover" theme="dark" />
 
 These hoverable rows can also be combined with the striped rows variant:
 
@@ -105,7 +99,7 @@ These hoverable rows can also be combined with the striped rows variant:
 
 Highlight a table row or cell by adding a `.table-active` class.
 
-<Example showMarkup={false} code={`
+<Example code={`
 <table class="table">
   <thead>
     <tr>
@@ -136,9 +130,7 @@ Highlight a table row or cell by adding a `.table-active` class.
     </tr>
   </tbody>
 </table>
-`} />
-
-```html
+`} customMarkup={`
 <table class="table">
   <thead>
     ...
@@ -158,10 +150,10 @@ Highlight a table row or cell by adding a `.table-active` class.
     </tr>
   </tbody>
 </table>
-```
+`} />
 
-<Example showMarkup={false} code={`
-<table class="table table-dark">
+<Example code={`
+<table class="table" data-bs-theme="dark">
   <thead>
     <tr>
       <th scope="col">#</th>
@@ -191,10 +183,8 @@ Highlight a table row or cell by adding a `.table-active` class.
     </tr>
   </tbody>
 </table>
-`} />
-
-```html
-<table class="table table-dark">
+`} customMarkup={`
+<table class="table" data-bs-theme="dark">
   <thead>
     ...
   </thead>
@@ -213,21 +203,25 @@ Highlight a table row or cell by adding a `.table-active` class.
     </tr>
   </tbody>
 </table>
-```
+`} />
 
 ## How do the variants and accented tables work?
 
 For the accented tables ([striped rows](#striped-rows), [striped columns](#striped-columns), [hoverable rows](#hoverable-rows), and [active tables](#active-tables)), we used some techniques to make these effects work for all our [table variants](#variants):
 
 - We start by setting the background of a table cell with the `--bs-table-bg` custom property. All table variants then set that custom property to colorize the table cells. This way, we don’t get into trouble if semi-transparent colors are used as table backgrounds.
+
 - Then we add an inset box shadow on the table cells with `box-shadow: inset 0 0 0 9999px var(--bs-table-bg-state, var(--bs-table-bg-type, var(--bs-table-accent-bg)));` to layer on top of any specified `background-color`. It uses custom cascade to override the `box-shadow`, regardless the CSS specificity. Because we use a huge spread and no blur, the color will be monotone. Since `--bs-table-accent-bg` is set to `transparent` by default, we don’t have a default box shadow.
+
 - When either `.table-striped`, `.table-striped-columns`, `.table-hover` or `.table-active` classes are added, either `--bs-table-bg-type` or `--bs-table-bg-state` (by default set to `initial`) are set to a semitransparent color (`--bs-table-striped-bg`, `--bs-table-active-bg` or `--bs-table-hover-bg`) to colorize the background and override default `--bs-table-accent-bg`.
-- For each table variant, we generate a `--bs-table-accent-bg` color with the highest contrast depending on that color. For example, the accent color for `.table-primary` is darker while `.table-dark` has a lighter accent color.
+
+- For each table variant, we set `--bs-table-bg-type` or `--bs-table-bg-state` to a semi-transparent color derived from the current theme color. Those values are layered in the inset box shadow, while `--bs-table-accent-bg` remains a transparent fallback.
+
 - Text and border colors are generated the same way, and their colors are inherited by default.
 
 Behind the scenes it looks like this:
 
-<ScssDocs name="table-variant" file="scss/mixins/_table-variants.scss" />
+{/* <ScssDocs name="table-variants-loop" file="scss/content/_tables.scss" /> */}
 
 ## Table borders
 
@@ -237,7 +231,7 @@ Add `.table-bordered` for borders on all sides of the table and cells.
 
 <Table class="table table-bordered" />
 
-[Border color utilities]([[docsref:/utilities/borders#border-color]]) can be added to change colors:
+[Border color utilities]([[docsref:/utilities/border#border-color]]) can be added to change colors:
 
 <Table class="table table-bordered border-primary" />
 
@@ -247,7 +241,148 @@ Add `.table-borderless` for a table without borders.
 
 <Table class="table table-borderless" />
 
-<Table class="table table-dark table-borderless" />
+<Table class="table table-borderless" theme="dark" />
+
+## Card-like tables
+
+Need a bordered, rounded table without nesting it in a [card]([[docsref:/components/card]])? Wrap the table and clip the corners.
+
+### With utilities
+
+Compose [border]([[docsref:/utilities/border]]), [border radius]([[docsref:/utilities/border-radius]]), and [overflow]([[docsref:/utilities/overflow]]) utilities. Drop the table’s bottom margin with `.mb-0`.
+
+<Example code={`<div class="border rounded overflow-hidden">
+  <table class="table table-striped mb-0">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">First</th>
+        <th scope="col">Last</th>
+        <th scope="col">Handle</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">1</th>
+        <td>Mark</td>
+        <td>Otto</td>
+        <td>@mdo</td>
+      </tr>
+      <tr>
+        <th scope="row">2</th>
+        <td>Jacob</td>
+        <td>Thornton</td>
+        <td>@fat</td>
+      </tr>
+      <tr>
+        <th scope="row">3</th>
+        <td>John</td>
+        <td>Doe</td>
+        <td>@social</td>
+      </tr>
+    </tbody>
+  </table>
+</div>`} customMarkup={`<div class="border rounded overflow-hidden">
+    <table class="table table-striped mb-0">
+      ...
+    </table>
+  </div>`} />
+
+### With `.table-card`
+
+Use `.table-card` for the same look. It rounds corners like a card, clips cell backgrounds, and removes the last row’s bottom border so it does not stack on the wrapper.
+
+<Example code={`<div class="table-card">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">First</th>
+        <th scope="col">Last</th>
+        <th scope="col">Handle</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">1</th>
+        <td>Mark</td>
+        <td>Otto</td>
+        <td>@mdo</td>
+      </tr>
+      <tr>
+        <th scope="row">2</th>
+        <td>Jacob</td>
+        <td>Thornton</td>
+        <td>@fat</td>
+      </tr>
+      <tr>
+        <th scope="row">3</th>
+        <td>John</td>
+        <td>Doe</td>
+        <td>@social</td>
+      </tr>
+    </tbody>
+  </table>
+</div>`} customMarkup={`<div class="table-card">
+    <table class="table table-hover">
+      ...
+    </table>
+  </div>`} />
+
+Combine it with a responsive wrapper when the table can overflow:
+
+<ResizableExample code={`<div class="table-responsive table-card">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Heading</th>
+          <th scope="col">Heading</th>
+          <th scope="col">Heading</th>
+          <th scope="col">Heading</th>
+          <th scope="col">Heading</th>
+          <th scope="col">Heading</th>
+          <th scope="col">Heading</th>
+          <th scope="col">Heading</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">1</th>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+        </tr>
+        <tr>
+          <th scope="row">2</th>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+        </tr>
+        <tr>
+          <th scope="row">3</th>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+          <td>Cell</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>`} />
 
 ## Small tables
 
@@ -255,7 +390,7 @@ Add `.table-sm` to make any `.table` more compact by cutting all cell `padding` 
 
 <Table class="table table-sm" />
 
-<Table class="table table-dark table-sm" />
+<Table class="table table-sm" theme="dark" />
 
 ## Table group dividers
 
@@ -296,7 +431,7 @@ Add a thicker border, darker between table groups—`<thead>`, `<tbody>`, and `<
 
 Table cells of `<thead>` are always vertical aligned to the bottom. Table cells in `<tbody>` inherit their alignment from `<table>` and are aligned to the top by default. Use the [vertical align]([[docsref:/utilities/vertical-align]]) classes to re-align where needed.
 
-<Example showMarkup={false} code={`
+<Example code={`
 <div class="table-responsive">
   <table class="table align-middle">
     <thead>
@@ -329,9 +464,7 @@ Table cells of `<thead>` are always vertical aligned to the bottom. Table cells 
     </tbody>
   </table>
 </div>
-`} />
-
-```html
+`} customMarkup={`
 <div class="table-responsive">
   <table class="table align-middle">
     <thead>
@@ -355,13 +488,13 @@ Table cells of `<thead>` are always vertical aligned to the bottom. Table cells 
     </tbody>
   </table>
 </div>
-```
+`} />
 
 ## Nesting
 
 Border styles, active styles, and table variants are not inherited by nested tables.
 
-<Example showMarkup={false} code={`
+<Example code={`
 <table class="table table-striped table-bordered">
   <thead>
     <tr>
@@ -416,9 +549,7 @@ Border styles, active styles, and table variants are not inherited by nested tab
     </tr>
   </tbody>
 </table>
-`} />
-
-```html
+`} customMarkup={`
 <table class="table table-striped table-bordered">
   <thead>
     ...
@@ -435,109 +566,15 @@ Border styles, active styles, and table variants are not inherited by nested tab
     ...
   </tbody>
 </table>
-```
+`} />
 
 ## How nesting works
 
-To prevent _any_ styles from leaking to nested tables, we use the child combinator (`>`) selector in our CSS. Since we need to target all the `td`s and `th`s in the `thead`, `tbody`, and `tfoot`, our selector would look pretty long without it. As such, we use the rather odd looking `.table > :not(caption) > * > *` selector to target all `td`s and `th`s of the `.table`, but none of any potential nested tables.
+To prevent *any* styles from leaking to nested tables, we use the child combinator (`>`) selector in our CSS. Since we need to target all the `td`s and `th`s in the `thead`, `tbody`, and `tfoot`, our selector would look pretty long without it. As such, we use the rather odd looking `.table > :not(caption) > * > *` selector to target all `td`s and `th`s of the `.table`, but none of any potential nested tables.
 
 Note that if you add `<tr>`s as direct children of a table, those `<tr>` will be wrapped in a `<tbody>` by default, thus making our selectors work as intended.
 
-## Anatomy
-
-### Table head
-
-Similar to tables and dark tables, use the modifier classes `.table-light` or `.table-dark` to make `<thead>`s appear light or dark gray.
-
-<Example showMarkup={false} code={`
-<table class="table">
-  <thead class="table-light">
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">First</th>
-      <th scope="col">Last</th>
-      <th scope="col">Handle</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">1</th>
-      <td>Mark</td>
-      <td>Otto</td>
-      <td>@mdo</td>
-    </tr>
-    <tr>
-      <th scope="row">2</th>
-      <td>Jacob</td>
-      <td>Thornton</td>
-      <td>@fat</td>
-    </tr>
-    <tr>
-      <th scope="row">3</th>
-      <td>John</td>
-      <td>Doe</td>
-      <td>@social</td>
-    </tr>
-  </tbody>
-</table>
-`} />
-
-```html
-<table class="table">
-  <thead class="table-light">
-    ...
-  </thead>
-  <tbody>
-    ...
-  </tbody>
-</table>
-```
-
-<Example showMarkup={false} code={`
-<table class="table">
-  <thead class="table-dark">
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">First</th>
-      <th scope="col">Last</th>
-      <th scope="col">Handle</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">1</th>
-      <td>Mark</td>
-      <td>Otto</td>
-      <td>@mdo</td>
-    </tr>
-    <tr>
-      <th scope="row">2</th>
-      <td>Jacob</td>
-      <td>Thornton</td>
-      <td>@fat</td>
-    </tr>
-    <tr>
-      <th scope="row">3</th>
-      <td>John</td>
-      <td>Doe</td>
-      <td>@social</td>
-    </tr>
-  </tbody>
-</table>
-`} />
-
-```html
-<table class="table">
-  <thead class="table-dark">
-    ...
-  </thead>
-  <tbody>
-    ...
-  </tbody>
-</table>
-```
-
-### Table foot
+## Footer
 
 <Example showMarkup={false} code={`
 <table class="table">
@@ -594,7 +631,7 @@ Similar to tables and dark tables, use the modifier classes `.table-light` or `.
 </table>
 ```
 
-### Captions
+## Caption
 
 A `<caption>` functions like a heading for a table. It helps users with screen readers to find a table and understand what it’s about and decide if they want to read it.
 
@@ -651,21 +688,93 @@ You can also put the `<caption>` on the top of the table with `.caption-top`.
     </tbody>
   </table>`} />
 
+## Stacked tables
+
+Add `.table-stacked` to convert a table’s rows into stacked blocks when space is limited. Each row becomes a vertical block with the first cell acting as a bold title and the remaining cells displayed as label–value pairs. Labels are generated from `data-cell` attributes on each `<td>`.
+
+Both `.table-stacked` and `.table-responsive` use container queries, so the `.table-responsive` wrapper is required as the query container. Use `.md:table-stacked`, `.lg:table-stacked`, etc. to only stack below a specific container width. The default `.table-stacked` always stacks.
+
+<ResizableExample code={`
+<div class="table-responsive">
+  <table class="table md:table-stacked">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Type</th>
+        <th scope="col">Default</th>
+        <th scope="col">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td data-cell="Name">backdrop</td>
+        <td data-cell="Type">boolean or 'static'</td>
+        <td data-cell="Default">true</td>
+        <td data-cell="Description">Includes a backdrop element. Specify static for a backdrop which doesn’t close on click.</td>
+      </tr>
+      <tr>
+        <td data-cell="Name">keyboard</td>
+        <td data-cell="Type">boolean</td>
+        <td data-cell="Default">true</td>
+        <td data-cell="Description">Closes the component when escape key is pressed.</td>
+      </tr>
+      <tr>
+        <td data-cell="Name">focus</td>
+        <td data-cell="Type">boolean</td>
+        <td data-cell="Default">true</td>
+        <td data-cell="Description">Puts the focus on the component when initialized.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`} customMarkup={`
+<div class="table-responsive">
+  <table class="table md:table-stacked">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Type</th>
+        ...
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td data-cell="Name">backdrop</td>
+        <td data-cell="Type">boolean or 'static'</td>
+        ...
+      </tr>
+    </tbody>
+  </table>
+</div>
+`} />
+
+```html
+<!-- Always stacked -->
+<div class="table-responsive">
+  <table class="table table-stacked">...</table>
+</div>
+
+<!-- Stacked below md container width -->
+<div class="table-responsive">
+  <table class="table md:table-stacked">...</table>
+</div>
+```
+
 ## Responsive tables
 
-Responsive tables allow tables to be scrolled horizontally with ease. Make any table responsive across all viewports by wrapping a `.table` with `.table-responsive`. Or, pick a maximum breakpoint with which to have a responsive table up to by using `.table-responsive{-sm|-md|-lg|-xl|-xxl}`.
+Responsive tables allow tables to be scrolled horizontally with ease. Make any table responsive across all viewports by wrapping a `.table` with `.table-responsive`. Or, pick a maximum breakpoint with which to have a responsive table up to by using `.{sm|md|lg|xl|2xl}:table-responsive`.
+
+The `.table-responsive` wrapper also acts as the container query context for [stacked tables](#stacked-tables).
 
 <Callout type="warning">
-##### Vertical clipping/truncation
-
-Responsive tables make use of `overflow-y: hidden`, which clips off any content that goes beyond the bottom or top edges of the table. In particular, this can clip off dropdown menus and other third-party widgets.
+Responsive tables make use of `overflow-y: hidden`, which clips off any content that goes beyond the bottom or top edges of the table. In particular, this can clip off menus and other third-party widgets.
 </Callout>
 
 ### Always responsive
 
 Across every breakpoint, use `.table-responsive` for horizontally scrolling tables.
 
-<Example showMarkup={false} code={`
+<Example code={`
 <div class="table-responsive">
   <table class="table">
     <thead>
@@ -722,26 +831,24 @@ Across every breakpoint, use `.table-responsive` for horizontally scrolling tabl
     </tbody>
   </table>
 </div>
-`} />
-
-```html
+`} customMarkup={`
 <div class="table-responsive">
   <table class="table">
     ...
   </table>
 </div>
-```
+`} />
 
 ### Breakpoint specific
 
-Use `.table-responsive{-sm|-md|-lg|-xl|-xxl}` as needed to create responsive tables up to a particular breakpoint. From that breakpoint and up, the table will behave normally and not scroll horizontally.
+Use `.{sm|md|lg|xl|2xl}:table-responsive` as needed to create responsive tables up to a particular breakpoint. From that breakpoint and up, the table will behave normally and not scroll horizontally.
 
 **These tables may appear broken until their responsive styles apply at specific viewport widths.**
 
 {getData('breakpoints').map((breakpoint) => {
   return (
     <div class="bd-example">
-      <div class={`table-responsive${breakpoint.abbr}`}>
+      <div class={`${breakpoint.abbr}table-responsive`}>
         <table class="table">
           <thead>
             <tr>
@@ -797,7 +904,7 @@ Use `.table-responsive{-sm|-md|-lg|-xl|-xxl}` as needed to create responsive tab
   )
 })}
 
-<Code code={getData('breakpoints').map((breakpoint) => `<div class="table-responsive${breakpoint.abbr}">
+<Code code={getData('breakpoints').map((breakpoint) => `<div class="${breakpoint.abbr}table-responsive">
     <table class="table">
       ...
     </table>
@@ -806,15 +913,13 @@ Use `.table-responsive{-sm|-md|-lg|-xl|-xxl}` as needed to create responsive tab
 
 ## CSS
 
-### Sass variables
+### Variables
 
-<ScssDocs name="table-variables" file="scss/_variables.scss" />
+<CSSVariables component="Tables" className="table" />
 
-### Sass loops
-
-<ScssDocs name="table-loop" file="scss/_variables.scss" />
+<ScssDocs name="table-tokens" file="scss/content/_tables.scss" />
 
 ### Customizing
 
-- The factor variables (`$table-striped-bg-factor`, `$table-active-bg-factor` & `$table-hover-bg-factor`) are used to determine the contrast in table variants.
-- Apart from the light & dark table variants, theme colors are lightened by the `$table-bg-scale` variable.
+- The factor variables (`--table-striped-bg-factor`, `--table-active-bg-factor` & `--table-hover-bg-factor`) are used to determine the contrast in table variants.
+- Apart from the light & dark table variants, theme colors are lightened by the `--table-bg-scale` variable.

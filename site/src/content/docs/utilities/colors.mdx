@@ -1,76 +1,104 @@
 ---
 title: Colors
-description: Convey meaning through `color` with a handful of color utility classes. Includes support for styling links with hover states, too.
+description: Convey meaning through `color` with a handful of color utility classes, including built-in color mode adaptivity and support for translucency.
 toc: true
+utility:
+  - fg
+  - fg-emphasis
+  - fg-opacity
+  - fg-contrast
 ---
 
 import { getData } from '@libs/data'
 
-<Callout name="warning-color-assistive-technologies" />
+<Details name="warning-color-assistive-technologies" />
 
 ## Colors
 
-Colorize text with color utilities. If you want to colorize links, you can use the [`.link-*` helper classes]([[docsref:/helpers/colored-links]]) which have `:hover` and `:focus` states.
+Change the `color` using utilities built on our theme colors using `.fg-{color}` and `.fg-emphasis-{color}`. All these color utilities set the `color` property to a local CSS variable, `--bs-fg`, which has the value of the theme color. The root color tokens color values also use `light-dark()` to ensure sufficient contrast in both light and dark color modes.
 
-<Callout>
-Color utilities like `.text-*` that generated from our original `$theme-colors` Sass map don’t yet respond to color modes, however, any `.text-*-emphasis` utility will. This will be resolved in v6.
-</Callout>
-
-<Example code={[
-  ...getData('theme-colors').map((themeColor) => `<p class="text-${themeColor.name}${themeColor.contrast_color ? ` bg-${themeColor.contrast_color}` : ``}">.text-${themeColor.name}</p>
-<p class="text-${themeColor.name}-emphasis">.text-${themeColor.name}-emphasis</p>`),
-  `
-<p class="text-body">.text-body</p>
-<p class="text-body-emphasis">.text-body-emphasis</p>
-<p class="text-body-secondary">.text-body-secondary</p>
-<p class="text-body-tertiary">.text-body-tertiary</p>
-
-<p class="text-black bg-white">.text-black</p>
-<p class="text-white bg-dark">.text-white</p>
-<p class="text-black-50 bg-white">.text-black-50</p>
-<p class="text-white-50 bg-dark">.text-white-50</p>`
-]} />
-
-<Callout type="warning">
-**Deprecation:** With the addition of `.text-opacity-*` utilities and CSS variables for text utilities, `.text-black-50` and `.text-white-50` are deprecated as of v5.1.0. They’ll be removed in v6.0.0.
-</Callout>
-
-<Callout type="warning">
-**Deprecation:** With the addition of the expanded theme colors and variables, the `.text-muted` utility has been deprecated as of v5.3.0. Its default value has also been reassigned to the new `--bs-secondary-color` CSS variable to better support color modes. It will be removed in v6.0.0.
-</Callout>
-
-## Opacity
-
-<AddedIn version="5.1.0" />
-
-As of v5.1.0, text color utilities are generated with Sass using CSS variables. This allows for real-time color changes without compilation and dynamic alpha transparency changes.
-
-### How it works
-
-Consider our default `.text-primary` utility.
+For example, `.fg-primary` sets the `--bs-fg` variable to `var(--bs-primary-fg)`:
 
 ```css
-.text-primary {
-  --bs-text-opacity: 1;
-  color: rgba(var(--bs-primary-rgb), var(--bs-text-opacity)) !important;
+.fg-primary {
+  --bs-fg: var(--bs-primary-fg);
+  color: var(--bs-fg);
 }
 ```
 
-We use an RGB version of our `--bs-primary` (with the value of `13, 110, 253`) CSS variable and attached a second CSS variable, `--bs-text-opacity`, for the alpha transparency (with a default value `1` thanks to a local CSS variable). That means anytime you use `.text-primary` now, your computed `color` value is `rgba(13, 110, 253, 1)`. The local CSS variable inside each `.text-*` class avoids inheritance issues so nested instances of the utilities don’t automatically have a modified alpha transparency.
+This approach allows us to also easily support translucency with our `.fg-{opacity}` utilities as we can use `color-mix()` with the CSS variable to generate the appropriate color. See the [opacity section](#opacity) for more details.
 
-### Example
+If you want to colorize links, you can use the [`.link-{color}` utilities]([[docsref:/utilities/link]]) which have `:hover` and `:focus` states.
 
-To change that opacity, override `--bs-text-opacity` via custom styles or inline styles.
+<Example code={[
+  ...getData('theme-colors').map((themeColor) => `<p class="fg-${themeColor.name}">.fg-${themeColor.name}</p>
+<p class="fg-emphasis-${themeColor.name}">.fg-emphasis-${themeColor.name}</p>`),
+  `
+<p class="fg-body">.fg-body</p>
+<p class="fg-1">.fg-1</p>
+<p class="fg-2">.fg-2</p>
+<p class="fg-3">.fg-3</p>
+<p class="fg-4">.fg-4</p>
 
-<Example code={`<div class="text-primary">This is default primary text</div>
-<div class="text-primary" style="--bs-text-opacity: .5;">This is 50% opacity primary text</div>`} />
+<p class="fg-black bg-white">.fg-black</p>
+<p class="fg-white bg-black">.fg-white</p>`
+]} />
 
-Or, choose from any of the `.text-opacity` utilities:
+## Opacity
 
-<Example code={`<div class="text-primary">This is default primary text</div>
-<div class="text-primary text-opacity-75">This is 75% opacity primary text</div>
-<div class="text-primary text-opacity-50">This is 50% opacity primary text</div>
-<div class="text-primary text-opacity-25">This is 25% opacity primary text</div>`} />
+Change the opacity of a text color by using any of the `.fg-<percentage>` utilities which use `color-mix()` to mix the text color with `transparent` thanks to the CSS variable approach mentioned above.
+
+<Example class="d-flex flex-column gap-2" code={`<div class="fg-primary">This is default primary text</div>
+<div class="fg-primary fg-90">This is 90% opacity primary text</div>
+<div class="fg-primary fg-80">This is 80% opacity primary text</div>
+<div class="fg-primary fg-70">This is 70% opacity primary text</div>
+<div class="fg-primary fg-60">This is 60% opacity primary text</div>
+<div class="fg-primary fg-50">This is 50% opacity primary text</div>
+<div class="fg-primary fg-40">This is 40% opacity primary text</div>
+<div class="fg-primary fg-30">This is 30% opacity primary text</div>
+<div class="fg-primary fg-20">This is 20% opacity primary text</div>
+<div class="fg-primary fg-10">This is 10% opacity primary text</div>`} />
+
+## Contrast colors
+
+Change the contrast color of a text or link with `.fg-contrast-{color}`. This will set the `--bs-fg` variable to the theme’s `contrast` key color.
+```css
+.fg-contrast-primary {
+  --bs-fg: var(--bs-white);
+  color: var(--bs-fg);
+}
+```
+
+<Example class="d-flex flex-column gap-2" code={`<p class="bg-primary fg-contrast-primary">.fg-contrast-primary</p>
+<p class="bg-accent fg-contrast-accent">.fg-contrast-accent</p>
+<p class="bg-success fg-contrast-success">.fg-contrast-success</p>
+<p class="bg-danger fg-contrast-danger">.fg-contrast-danger</p>
+<p class="bg-warning fg-contrast-warning">.fg-contrast-warning</p>
+<p class="bg-info fg-contrast-info">.fg-contrast-info</p>
+<p class="bg-inverse fg-contrast-inverse">.fg-contrast-inverse</p>
+<p class="bg-secondary fg-contrast-secondary">.fg-contrast-secondary</p>`} />
+
+These even mix with the opacity utilities.
+
+<Example class="d-flex flex-column gap-2" code={`<p class="bg-primary fg-contrast-primary fg-100">.fg-contrast-primary fg-100</p>
+<p class="bg-primary fg-contrast-primary fg-90">.fg-contrast-primary fg-90</p>
+<p class="bg-primary fg-contrast-primary fg-80">.fg-contrast-primary fg-80</p>
+<p class="bg-primary fg-contrast-primary fg-70">.fg-contrast-primary fg-70</p>
+<p class="bg-primary fg-contrast-primary fg-60">.fg-contrast-primary fg-60</p>
+<p class="bg-primary fg-contrast-primary fg-50">.fg-contrast-primary fg-50</p>
+<p class="bg-primary fg-contrast-primary fg-40">.fg-contrast-primary fg-40</p>
+<p class="bg-primary fg-contrast-primary fg-30">.fg-contrast-primary fg-30</p>
+<p class="bg-primary fg-contrast-primary fg-20">.fg-contrast-primary fg-20</p>
+<p class="bg-primary fg-contrast-primary fg-10">.fg-contrast-primary fg-10</p>`} />
+
+## Reset color
+
+Reset a text or link’s color with `.fg-reset`, so that it inherits the color from its parent.
+
+<Example code={`<p class="fg-danger">
+    Danger text with a <a href="#">normal link</a> and a <a href="#" class="fg-reset">reset link</a>.
+  </p>
+  `} />
 
 ## Specificity
 
@@ -78,51 +106,15 @@ Sometimes contextual classes cannot be applied due to the specificity of another
 
 ## CSS
 
-In addition to the following Sass functionality, consider reading about our included [CSS custom properties]([[docsref:/customize/css-variables]]) (aka CSS variables) for colors and more.
+In addition to the following Sass functionality, consider reading about our included [CSS custom properties]([[docsref:/getting-started/css-variables]]) (aka CSS variables) for colors and more.
 
 ### Sass variables
 
-Most `color` utilities are generated by our theme colors, reassigned from our generic color palette variables.
-
-<ScssDocs name="color-variables" file="scss/_variables.scss" />
-
-<ScssDocs name="theme-color-variables" file="scss/_variables.scss" />
-
-Grayscale colors are also available, but only a subset are used to generate any utilities.
-
-<ScssDocs name="gray-color-variables" file="scss/_variables.scss" />
-
-<ScssDocs name="theme-text-map" file="scss/_maps.scss" />
-
-Variables for setting colors in `.text-*-emphasis` utilities in light and dark mode:
-
-<ScssDocs name="theme-text-variables" file="scss/_variables.scss" />
-
-<ScssDocs name="theme-text-dark-variables" file="scss/_variables-dark.scss" />
+Most `color` utilities are generated by our theme colors, reassigned from our generic color palette variables. Grayscale colors are also available, but only a subset are used to generate any utilities. See the [Color]([[docsref:/customize/color]]) documentation for our base color variables and map.
 
 ### Sass maps
 
-Theme colors are then put into a Sass map so we can loop over them to generate our utilities, component modifiers, and more.
-
-<ScssDocs name="theme-colors-map" file="scss/_variables.scss" />
-
-Grayscale colors are also available as a Sass map. **This map is not used to generate any utilities.**
-
-<ScssDocs name="gray-colors-map" file="scss/_variables.scss" />
-
-RGB colors are generated from a separate Sass map:
-
-<ScssDocs name="theme-colors-rgb" file="scss/_maps.scss" />
-
-Color opacities build on that with their own map that’s consumed by the utilities API:
-
-<ScssDocs name="utilities-text-colors" file="scss/_maps.scss" />
-
-Color mode adaptive text colors are also available as a Sass map:
-
-<ScssDocs name="theme-text-map" file="scss/_maps.scss" />
-
-<ScssDocs name="theme-text-dark-map" file="scss/_maps.scss" />
+Theme colors are then put into a Sass map so we can loop over them to generate our utilities, component modifiers, and more. See the [Theme]([[docsref:/customize/theme]]) documentation for the full `$theme-colors` Sass map.
 
 ### Sass utilities API
 
